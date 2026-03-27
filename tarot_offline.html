@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tarot Oracle ✦ オフライン版</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0d0a14; --card-bg:#1a1528; --gold:#c9a84c; --gold-light:#e8c97a;
+    --gold-dim:#6e5a2a; --purple:#6b3fa0; --purple-light:#9b6fc8;
+    --text:#e8dfc8; --text-dim:#9e8e72; --border:rgba(201,168,76,.25); --shadow:rgba(0,0,0,.7);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Cormorant Garamond',Georgia,serif;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 20%,rgba(107,63,160,.15) 0%,transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(30,15,60,.4) 0%,transparent 50%),radial-gradient(ellipse at 50% 0%,rgba(201,168,76,.05) 0%,transparent 40%);pointer-events:none;z-index:0;}
+  .stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+  .star{position:absolute;background:white;border-radius:50%;animation:twinkle var(--dur,3s) ease-in-out infinite;animation-delay:var(--delay,0s);opacity:0;}
+  @keyframes twinkle{0%,100%{opacity:0;transform:scale(1);}50%{opacity:var(--brightness,.7);transform:scale(1.2);}}
+  .container{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:40px 20px 80px;}
+
+  header{text-align:center;margin-bottom:50px;}
+  .header-ornament{color:var(--gold);font-size:1.2rem;letter-spacing:.5em;margin-bottom:8px;opacity:.6;}
+  h1{font-family:'Cinzel Decorative',serif;font-size:clamp(1.8rem,5vw,3rem);color:var(--gold-light);text-shadow:0 0 30px rgba(201,168,76,.3),0 2px 4px rgba(0,0,0,.8);letter-spacing:.05em;line-height:1.2;margin-bottom:10px;}
+  .subtitle{font-style:italic;color:var(--text-dim);font-size:1.1rem;letter-spacing:.1em;}
+  .offline-badge{display:inline-block;margin-top:10px;padding:3px 14px;border:1px solid rgba(76,175,130,.5);border-radius:20px;font-size:.72rem;color:#4caf82;letter-spacing:.1em;}
+
+  .panel{background:linear-gradient(135deg,rgba(26,21,40,.9),rgba(19,15,30,.95));border:1px solid var(--border);border-radius:12px;padding:24px 28px;margin-bottom:16px;box-shadow:0 4px 24px var(--shadow),inset 0 1px 0 rgba(201,168,76,.1);}
+  .panel-title{font-family:'Cinzel Decorative',serif;font-size:.7rem;color:var(--gold);letter-spacing:.3em;text-transform:uppercase;margin-bottom:16px;opacity:.8;}
+
+  .option-grid{display:flex;gap:10px;flex-wrap:wrap;}
+  .opt-btn{flex:1;min-width:65px;padding:10px 6px;background:transparent;border:1px solid var(--gold-dim);border-radius:8px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;cursor:pointer;transition:all .25s;text-align:center;}
+  .opt-btn:hover,.opt-btn.active{border-color:var(--gold);color:var(--gold-light);background:rgba(201,168,76,.1);box-shadow:0 0 14px rgba(201,168,76,.15);}
+  .num{display:block;font-size:1.4rem;font-weight:700;margin-bottom:2px;}
+  .desc{display:block;font-size:.7rem;font-style:italic;opacity:.7;}
+
+  .arcana-grid{display:flex;gap:10px;}
+  .arcana-btn{flex:1;padding:10px;background:transparent;border:1px solid var(--gold-dim);border-radius:8px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;cursor:pointer;transition:all .25s;text-align:center;}
+  .arcana-btn:hover,.arcana-btn.active{border-color:var(--gold);color:var(--gold-light);background:rgba(201,168,76,.1);box-shadow:0 0 14px rgba(201,168,76,.15);}
+  .arcana-btn .a-label{display:block;font-size:.9rem;font-weight:600;margin-bottom:2px;}
+  .arcana-btn .a-desc{display:block;font-size:.7rem;opacity:.65;font-style:italic;}
+
+  .theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  @media(max-width:500px){.theme-grid{grid-template-columns:repeat(2,1fr);}}
+  .theme-btn{padding:10px 8px;background:transparent;border:1px solid var(--gold-dim);border-radius:8px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-size:.9rem;cursor:pointer;transition:all .25s;text-align:center;line-height:1.4;}
+  .theme-btn:hover,.theme-btn.active{border-color:var(--gold);color:var(--gold-light);background:rgba(201,168,76,.1);box-shadow:0 0 12px rgba(201,168,76,.12);}
+  .theme-icon{display:block;font-size:1.3rem;margin-bottom:3px;}
+
+  .toggles-row{display:flex;gap:16px;flex-wrap:wrap;}
+  .toggle-wrap{display:flex;align-items:center;gap:12px;flex:1;min-width:180px;}
+  .toggle-label{font-size:.95rem;color:var(--text-dim);flex:1;}
+  .toggle{position:relative;width:54px;height:28px;flex-shrink:0;}
+  .toggle input{display:none;}
+  .toggle-track{position:absolute;inset:0;background:rgba(201,168,76,.15);border:1px solid var(--gold-dim);border-radius:14px;cursor:pointer;transition:all .3s;}
+  .toggle input:checked~.toggle-track{background:rgba(201,168,76,.3);border-color:var(--gold);box-shadow:0 0 10px rgba(201,168,76,.2);}
+  .toggle-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;background:var(--gold-dim);border-radius:50%;transition:all .3s;pointer-events:none;}
+  .toggle input:checked~.toggle-track .toggle-thumb{left:29px;background:var(--gold-light);box-shadow:0 0 8px rgba(201,168,76,.5);}
+
+  .draw-btn{width:100%;padding:18px;background:linear-gradient(135deg,rgba(107,63,160,.4),rgba(50,25,90,.6));border:1px solid var(--purple-light);border-radius:10px;color:var(--text);font-family:'Cinzel Decorative',serif;font-size:1rem;letter-spacing:.15em;cursor:pointer;transition:all .3s;box-shadow:0 4px 20px rgba(107,63,160,.2);margin-bottom:16px;}
+  .draw-btn:hover{border-color:var(--gold);color:var(--gold-light);box-shadow:0 4px 30px rgba(201,168,76,.2),0 0 60px rgba(107,63,160,.3);transform:translateY(-1px);}
+  .draw-btn:active{transform:translateY(0);}
+  .draw-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+  .loading{text-align:center;padding:36px;display:none;}
+  .loading-orb{width:48px;height:48px;border:2px solid var(--gold-dim);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  #cards-area{display:none;}
+  .cards-grid{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:16px;}
+  .card-wrapper{opacity:0;transform:translateY(30px);transition:all .6s ease;text-align:center;cursor:pointer;}
+  .card-wrapper.visible{opacity:1;transform:translateY(0);}
+  .card-wrapper.selected .card-frame{border-color:var(--gold);box-shadow:0 0 30px rgba(201,168,76,.4),0 8px 32px var(--shadow);}
+  .card-frame{width:120px;height:210px;border:2px solid var(--gold-dim);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--card-bg);margin:0 auto 10px;transition:all .3s;position:relative;box-shadow:0 4px 20px var(--shadow);}
+  .card-frame:hover{border-color:var(--gold);box-shadow:0 0 20px rgba(201,168,76,.25),0 8px 24px var(--shadow);}
+  .card-frame img{width:100%;height:100%;object-fit:cover;display:block;}
+  .card-frame.reversed img{transform:rotate(180deg);}
+  .card-badge{position:absolute;top:6px;right:6px;background:rgba(13,10,20,.85);border:1px solid var(--gold-dim);border-radius:4px;padding:2px 6px;font-size:.6rem;color:var(--gold);letter-spacing:.05em;font-family:'Cinzel Decorative',serif;}
+  .card-name{font-size:.82rem;color:var(--gold-light);font-style:italic;letter-spacing:.05em;margin-bottom:3px;}
+  .card-pos-label{font-size:.68rem;color:var(--text-dim);letter-spacing:.1em;}
+  .nav-hint{text-align:center;font-size:.83rem;color:var(--text-dim);font-style:italic;margin-bottom:20px;}
+
+  /* 総合リーディングパネル */
+  @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  .overall-panel{background:linear-gradient(135deg,rgba(30,15,55,.95),rgba(20,10,40,.98));border:1px solid rgba(155,111,200,.4);border-radius:12px;padding:28px 32px;margin-bottom:16px;box-shadow:0 4px 30px rgba(107,63,160,.25),inset 0 1px 0 rgba(155,111,200,.15);animation:fadeIn .6s ease;}
+  .overall-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(155,111,200,.2);}
+  .overall-icon{font-size:1.6rem;}
+  .overall-title{font-family:'Cinzel Decorative',serif;font-size:.9rem;color:var(--purple-light);letter-spacing:.1em;}
+  .overall-subtitle{font-size:.82rem;color:var(--text-dim);font-style:italic;margin-top:2px;}
+  .overall-theme-badge{display:inline-block;padding:3px 14px;border:1px solid rgba(155,111,200,.4);border-radius:20px;font-size:.72rem;color:var(--purple-light);margin-bottom:16px;}
+  .overall-score-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+  .overall-score-label{font-family:'Cinzel Decorative',serif;font-size:.58rem;color:var(--gold);letter-spacing:.2em;opacity:.75;white-space:nowrap;}
+  .overall-score-bar{flex:1;height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;}
+  .overall-score-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#c85050,#e8a030,#c9a84c,#4caf82);transition:width 1s ease;}
+  .overall-score-val{font-size:.8rem;color:var(--text-dim);white-space:nowrap;}
+
+  /* 流れセクション */
+  .flow-section{margin-bottom:18px;}
+  .flow-title{font-family:'Cinzel Decorative',serif;font-size:.62rem;color:var(--gold);letter-spacing:.28em;opacity:.75;margin-bottom:10px;}
+  .flow-text{font-size:1.05rem;line-height:2;color:var(--text);font-weight:300;}
+  .divider{border:none;border-top:1px solid rgba(155,111,200,.2);margin:18px 0;}
+
+  /* カード別ミニ解説 */
+  .card-messages{display:flex;flex-direction:column;gap:10px;margin-bottom:4px;}
+  .card-msg-row{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:rgba(13,10,20,.4);border-radius:8px;border-left:2px solid var(--gold-dim);}
+  .card-msg-name{font-size:.78rem;color:var(--gold-light);font-style:italic;min-width:110px;flex-shrink:0;padding-top:2px;}
+  .card-msg-text{font-size:.88rem;line-height:1.7;color:var(--text-dim);}
+
+  /* 個別解説パネル */
+  #reading-area{display:none;margin-top:0;}
+  .reading-panel{background:linear-gradient(135deg,rgba(26,21,40,.95),rgba(19,15,30,.98));border:1px solid var(--border);border-radius:12px;padding:28px 32px;box-shadow:0 4px 24px var(--shadow);animation:fadeIn .6s ease;margin-bottom:16px;}
+  .reading-card-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);text-align:center;margin-bottom:6px;}
+  .reading-position{text-align:center;font-style:italic;color:var(--text-dim);font-size:.88rem;margin-bottom:18px;}
+  .reading-section-title{font-family:'Cinzel Decorative',serif;font-size:.62rem;color:var(--gold);letter-spacing:.3em;opacity:.7;margin-bottom:10px;}
+  .reading-text{font-size:1.05rem;line-height:1.9;color:var(--text);font-weight:300;}
+  .reading-keyword{display:inline-block;padding:3px 10px;border:1px solid var(--gold-dim);border-radius:20px;font-size:.78rem;color:var(--gold);margin:3px;}
+
+  .reset-btn{display:none;margin:16px auto 0;padding:12px 32px;background:transparent;border:1px solid var(--gold-dim);border-radius:6px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-size:.95rem;cursor:pointer;letter-spacing:.1em;transition:all .25s;font-style:italic;}
+  .reset-btn:hover{border-color:var(--gold);color:var(--gold-light);}
+
+  @media(max-width:600px){
+    .panel{padding:18px 16px;}
+    .card-frame{width:95px;height:166px;}
+    .cards-grid{gap:10px;}
+    .reading-panel,.overall-panel{padding:20px 16px;}
+    .toggles-row{flex-direction:column;gap:12px;}
+    .card-msg-name{min-width:88px;}
+  }
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="container">
+  <header>
+    <div class="header-ornament">✦ ✦ ✦</div>
+    <h1>Tarot Oracle</h1>
+    <p class="subtitle">ライダー・ウェイト版タロット占い</p>
+    <div class="offline-badge">✓ オフライン動作 · AI不要</div>
+  </header>
+
+  <div class="panel">
+    <div class="panel-title">✦ 引く枚数</div>
+    <div class="option-grid">
+      <button class="opt-btn active" data-count="1"><span class="num">1</span><span class="desc">一枚引き</span></button>
+      <button class="opt-btn" data-count="3"><span class="num">3</span><span class="desc">過去・現在・未来</span></button>
+      <button class="opt-btn" data-count="5"><span class="num">5</span><span class="desc">ファイブカード</span></button>
+      <button class="opt-btn" data-count="10"><span class="num">10</span><span class="desc">ケルト十字</span></button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">✦ 使用するカード</div>
+    <div class="arcana-grid">
+      <button class="arcana-btn active" data-arcana="major"><span class="a-label">大アルカナのみ</span><span class="a-desc">22枚 ／ 人生の大きな流れ</span></button>
+      <button class="arcana-btn" data-arcana="all"><span class="a-label">全カード</span><span class="a-desc">78枚 ／ より詳細な読み</span></button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">✦ 何について占いますか？</div>
+    <div class="theme-grid">
+      <button class="theme-btn active" data-theme="overall"><span class="theme-icon">🌟</span>総合運</button>
+      <button class="theme-btn" data-theme="fortune"><span class="theme-icon">✨</span>直近の運勢</button>
+      <button class="theme-btn" data-theme="money"><span class="theme-icon">💰</span>金運</button>
+      <button class="theme-btn" data-theme="work"><span class="theme-icon">💼</span>仕事運</button>
+      <button class="theme-btn" data-theme="relation"><span class="theme-icon">🤝</span>対人運</button>
+      <button class="theme-btn" data-theme="love"><span class="theme-icon">💕</span>恋愛運</button>
+      <button class="theme-btn" data-theme="health"><span class="theme-icon">🌿</span>健康運</button>
+      <button class="theme-btn" data-theme="creative"><span class="theme-icon">🎨</span>創造・才能</button>
+      <button class="theme-btn" data-theme="spirit"><span class="theme-icon">🔮</span>心・精神面</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="toggles-row">
+      <div class="toggle-wrap">
+        <span class="toggle-label">逆位置を含める</span>
+        <label class="toggle"><input type="checkbox" id="reversed-toggle"><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+      </div>
+
+    </div>
+  </div>
+
+  <button class="draw-btn" id="draw-btn">✦ &nbsp; カードを引く &nbsp; ✦</button>
+
+  <div class="loading" id="loading">
+    <div class="loading-orb"></div>
+    <p style="color:var(--text-dim);font-style:italic;">カードを読み解いています…</p>
+  </div>
+
+  <div id="cards-area">
+    <div class="cards-grid" id="cards-grid"></div>
+    <p class="nav-hint">カードをタップして個別の解説を見る</p>
+    <div id="overall-area"></div>
+    <div id="reading-area"><div class="reading-panel" id="reading-panel"></div></div>
+    <button class="reset-btn" id="reset-btn">もう一度占う</button>
+  </div>
+</div>
+
+<script>
+// ===== タロットデータ =====
+const TAROT_DATA = {
+  "major_0":  {name:"愚者",       en:"The Fool",           score:2,  rscore:-1, keywords:["新しい始まり","自由","冒険","可能性"],       upright:"新しい出発のエネルギーが満ちています。直感を信じて、軽やかに踏み出すことで思いがけない豊かさが待っています。",    reversed:"準備不足や衝動的な行動への警告。一歩立ち止まり、冷静に見直す必要があります。"},
+  "major_1":  {name:"魔術師",     en:"The Magician",       score:3,  rscore:0,  keywords:["意志力","創造","技術","行動力"],             upright:"目標を実現するための力がすべて揃っています。今こそ行動に移す最良のタイミングです。",                              reversed:"力を正しく活かせていない状態。焦りや自己欺瞞に注意が必要です。"},
+  "major_2":  {name:"女教皇",     en:"The High Priestess", score:-1, rscore:-2, keywords:["直感","神秘","内省","知恵"],                 upright:"表面には見えない深い真実があります。静かに直感に耳を傾け、焦らず答えを待ちましょう。",                              reversed:"直感を無視しているサイン。内なる声に従うことが大切です。"},
+  "major_3":  {name:"女帝",       en:"The Empress",        score:2,  rscore:0,  keywords:["豊かさ","創造","繁栄","母性"],               upright:"豊かさと繁栄のエネルギーが満ちています。感覚を大切にした選択が実を結ぶ時期です。",                                reversed:"創造力の停滞や執着への警告。自分自身を大切にすることを忘れないで。"},
+  "major_4":  {name:"皇帝",       en:"The Emperor",        score:1,  rscore:-1, keywords:["権威","安定","構造","責任"],                 upright:"確固とした判断力と安定感があります。論理的に検討し、着実に進む時です。",                                            reversed:"柔軟さの欠如や支配への欲求。もう少し視野を広げる必要があります。"},
+  "major_5":  {name:"法王",       en:"The Hierophant",     score:0,  rscore:-1, keywords:["伝統","教え","信仰","制度"],                 upright:"確立された知識や評判に従うことが吉。実績のある選択肢を選ぶ時期です。",                                            reversed:"従来の方法への疑問。自分自身の価値観に従って判断する必要があります。"},
+  "major_6":  {name:"恋人",       en:"The Lovers",         score:2,  rscore:-1, keywords:["愛","選択","調和","価値観"],                 upright:"大切な選択の時。心の声に従い、本当に価値あるものを選ぶことが求められています。",                                    reversed:"価値観の対立や優柔不断。本当の望みを明確にして決断する勇気を。"},
+  "major_7":  {name:"戦車",       en:"The Chariot",        score:3,  rscore:0,  keywords:["意志","勝利","前進","決断"],                 upright:"強い意志で目標に向かって前進する力があります。タイミングは今！勝利が待っています。",                                reversed:"衝動的な行動や方向性の喪失。本当に進むべき先を見定めてから動きましょう。"},
+  "major_8":  {name:"力",         en:"Strength",           score:1,  rscore:-1, keywords:["強さ","勇気","忍耐","内なる力"],             upright:"しなやかな強さで困難を乗り越える力があります。焦らず、自分のペースで進みましょう。",                                reversed:"自信の喪失や感情のコントロールの難しさ。自分を信じて一歩ずつ進むことが大切。"},
+  "major_9":  {name:"隠者",       en:"The Hermit",         score:-2, rscore:-3, keywords:["内省","孤独","智慧","探求"],                 upright:"今は立ち止まって内側と向き合う時。焦らず、静かな省察の中に答えが見つかります。",                                    reversed:"孤立への警告。信頼できる人に相談したり、もっと情報を集める必要があります。"},
+  "major_10": {name:"運命の輪",   en:"Wheel of Fortune",   score:2,  rscore:-1, keywords:["運命","変化","好機","転換点"],               upright:"大きな変化のチャンスが訪れています。タイミングの波に乗ることで、豊かな展開が開けます。",                            reversed:"悪い流れに注意。今は急がず、流れが変わるのを待つ時かもしれません。"},
+  "major_11": {name:"正義",       en:"Justice",            score:0,  rscore:-1, keywords:["公正","真実","バランス","責任"],             upright:"公正な判断と誠実さが大切。自分の行動に責任を持って選択することで良い結果が得られます。",                          reversed:"不誠実や不公正への警告。今一度、選択を見直す必要があります。"},
+  "major_12": {name:"吊るされた男",en:"The Hanged Man",    score:-2, rscore:-2, keywords:["犠牲","待機","新視点","手放し"],             upright:"今は待つ時。焦らず、異なる視点で物事を眺めることで重要な気づきが得られます。",                                    reversed:"不必要な犠牲への警告。何に縛られているかを見極め、解放することが大切。"},
+  "major_13": {name:"死神",       en:"Death",              score:-1, rscore:-2, keywords:["変容","終焉","再生","新たな始まり"],         upright:"古いものが終わり、新しいものが生まれる転換点。変化を受け入れることで新たな扉が開きます。",                          reversed:"変化への抵抗。手放すことを恐れずに、次のステージへ進む勇気を持ちましょう。"},
+  "major_14": {name:"節制",       en:"Temperance",         score:0,  rscore:-1, keywords:["調和","バランス","忍耐","中庸"],             upright:"バランスと調和を大切に。焦らず、穏やかに物事を進めることで確かな豊かさが訪れます。",                                reversed:"不均衡や極端さへの警告。中庸を意識して、もう少し慎重に進みましょう。"},
+  "major_15": {name:"悪魔",       en:"The Devil",          score:-2, rscore:-3, keywords:["束縛","執着","誘惑","物質主義"],             upright:"欲求や執着に注意。本当に必要なものかを冷静に見極める必要があります。",                                              reversed:"束縛からの解放の始まり。執着を手放すことで、より良い選択ができるようになります。"},
+  "major_16": {name:"塔",         en:"The Tower",          score:-3, rscore:-2, keywords:["崩壊","衝撃","覚醒","再構築"],               upright:"突然の変化のサイン。今は急ぎすぎず、安定を確認してから動くことをお勧めします。",                                    reversed:"激しい変化の回避。今は動かず様子を見ることで、より安全な選択ができます。"},
+  "major_17": {name:"星",         en:"The Star",           score:2,  rscore:0,  keywords:["希望","癒し","インスピレーション","信頼"],   upright:"希望の光が差し込んでいます。夢と可能性が広がり、前向きな選択を後押しする星のエネルギー。",                          reversed:"希望を失いかけているサイン。焦らず、状況が好転するのを待ちましょう。"},
+  "major_18": {name:"月",         en:"The Moon",           score:-2, rscore:-2, keywords:["幻想","不安","神秘","潜在意識"],             upright:"物事が不明瞭な時期。直感を頼りにしながら、慎重に一歩一歩進むことが大切です。",                                    reversed:"混乱が晴れてきた兆し。徐々に真実が明らかになり、判断しやすくなってきます。"},
+  "major_19": {name:"太陽",       en:"The Sun",            score:3,  rscore:1,  keywords:["喜び","成功","活力","幸福"],                 upright:"明るく輝かしいエネルギー！物事は順調に進み、喜びと成功が待っています。今がベストタイミング！",                      reversed:"喜びが陰に隠れていますが、太陽は常に輝いています。少し視点を変えてみて。"},
+  "major_20": {name:"審判",       en:"Judgement",          score:1,  rscore:-1, keywords:["覚醒","解放","評価","使命"],                 upright:"重要な決断の時。過去を振り返りながら、より高い視点で判断することで正しい選択ができます。",                          reversed:"後悔や自己批判が判断を曇らせています。過去より前を向くことが大切。"},
+  "major_21": {name:"世界",       en:"The World",          score:3,  rscore:1,  keywords:["完成","達成","統合","成就"],                 upright:"サイクルの完結と真の達成。努力が実を結ぶ最良のタイミング。思い切って進みましょう！",                                reversed:"完成が遠のいているか、急ぎすぎのサイン。最後の仕上げを丁寧に。"},
+  "wands_ace":    {name:"ワンドのエース",    en:"Ace of Wands",      score:2,  rscore:-1, keywords:["創造","熱意","スタート"],       upright:"新しい情熱とエネルギーの始まり。行動を起こすのに最適な時期です。",                reversed:"準備不足か熱意が空回り。もう少し計画を整えてから動きましょう。"},
+  "wands_2":      {name:"ワンドの2",        en:"Two of Wands",      score:1,  rscore:-1, keywords:["計画","展望","決断"],           upright:"広大な可能性を前に計画中。具体的なビジョンを持って前進する時です。",            reversed:"決断を避けている状態。機会を逃しているかもしれません。"},
+  "wands_3":      {name:"ワンドの3",        en:"Three of Wands",    score:1,  rscore:0,  keywords:["展開","前進","視野"],           upright:"努力が実り始め、次の展開へ向けて準備が整っています。",                          reversed:"期待していた成果が遅れている。計画の見直しが必要かもしれません。"},
+  "wands_4":      {name:"ワンドの4",        en:"Four of Wands",     score:2,  rscore:0,  keywords:["祝祭","調和","安定"],           upright:"達成を祝う時期。安定した状況の中で、安心して選択できるタイミングです。",          reversed:"不調和な状況。もう少し環境が整うのを待ちましょう。"},
+  "wands_5":      {name:"ワンドの5",        en:"Five of Wands",     score:-1, rscore:-2, keywords:["競争","葛藤","混乱"],           upright:"競争や混乱の時期。情報を整理してから決断しましょう。",                          reversed:"競争が収まりつつあります。落ち着いてから動くと良いでしょう。"},
+  "wands_6":      {name:"ワンドの6",        en:"Six of Wands",      score:2,  rscore:0,  keywords:["勝利","認知","成功"],           upright:"努力が認められ、成功のタイミング。自信を持って進みましょう。",                  reversed:"慢心への注意。内なる確信を大切に判断を。"},
+  "wands_7":      {name:"ワンドの7",        en:"Seven of Wands",    score:0,  rscore:-1, keywords:["防衛","信念","立場"],           upright:"挑戦があっても信念を持って進む時。あなたの選択を信じましょう。",                reversed:"プレッシャーに押されている状態。自分の価値を見失わないで。"},
+  "wands_8":      {name:"ワンドの8",        en:"Eight of Wands",    score:3,  rscore:0,  keywords:["スピード","動き","機会"],       upright:"物事が急速に動き出す時期。素早い行動が吉です。",                              reversed:"スピードが速すぎて混乱気味。ペースを整えて確認しながら進みましょう。"},
+  "wands_9":      {name:"ワンドの9",        en:"Nine of Wands",     score:1,  rscore:-1, keywords:["忍耐","回復力","踏ん張り"],     upright:"もう少しで目標に到達します。最後の力を振り絞って進みましょう。",                reversed:"過度な警戒心が前進を妨げています。防衛を少し緩めてみて。"},
+  "wands_10":     {name:"ワンドの10",       en:"Ten of Wands",      score:-1, rscore:-2, keywords:["重荷","過負荷","完成"],         upright:"多くを背負っている状態。助けを借りることも知恵です。",                          reversed:"重荷を手放す時。今は無理せず休むことで次の力が生まれます。"},
+  "wands_page":   {name:"ワンドのペイジ",   en:"Page of Wands",     score:1,  rscore:-1, keywords:["熱意","探求","新鮮さ"],         upright:"新しいことへの好奇心と熱意が高まっています。小さな一歩を踏み出して。",          reversed:"衝動的な行動への注意。もう少し計画を練ってから動きましょう。"},
+  "wands_knight": {name:"ワンドのナイト",   en:"Knight of Wands",   score:2,  rscore:-1, keywords:["冒険","行動力","カリスマ"],     upright:"情熱的なエネルギーで素早く行動する時。目標に向かって果敢に進みましょう。",      reversed:"衝動的すぎる状態。一呼吸置いて方向性を確認してから。"},
+  "wands_queen":  {name:"ワンドのクイーン", en:"Queen of Wands",    score:2,  rscore:0,  keywords:["自信","独立","情熱"],           upright:"自信と魅力が輝いています。直感的な判断を信じて動く時です。",                    reversed:"内なる不安から防衛的になっていませんか？自分を信じて。"},
+  "wands_king":   {name:"ワンドのキング",   en:"King of Wands",     score:1,  rscore:-1, keywords:["ビジョン","リーダーシップ","責任"], upright:"大きなビジョンと責任感で進む時。長期的な視点での判断が吉です。",           reversed:"傲慢さへの警告。周囲の声にも耳を傾けることが大切。"},
+  "cups_ace":     {name:"カップのエース",   en:"Ace of Cups",       score:2,  rscore:0,  keywords:["愛","感情","直感"],             upright:"感情的な満足と新しい扉が開かれます。心が動くものを選ぶ時期です。",              reversed:"感情の抑圧や愛を受け取ることへの恐れ。心を開いてみて。"},
+  "cups_2":       {name:"カップの2",       en:"Two of Cups",       score:1,  rscore:-1, keywords:["パートナーシップ","調和","繋がり"], upright:"調和と相互理解の時期。信頼できる関係の中での選択が実を結びます。",           reversed:"関係のバランスの崩れに注意。よく話し合って進めましょう。"},
+  "cups_3":       {name:"カップの3",       en:"Three of Cups",     score:2,  rscore:0,  keywords:["祝祭","友情","喜び"],           upright:"喜びを分かち合える時期。共に祝う気持ちで前向きに進みましょう。",              reversed:"過剰な楽しみや孤立に注意。バランスを大切に。"},
+  "cups_4":       {name:"カップの4",       en:"Four of Cups",      score:-1, rscore:-2, keywords:["内省","不満","機会の見落とし"], upright:"目の前の豊かさに気づいていないかも。視野を広げて、差し出された機会に目を向けて。", reversed:"新しい視点で世界を見ることで選択肢が見えてきます。"},
+  "cups_5":       {name:"カップの5",       en:"Five of Cups",      score:-2, rscore:-1, keywords:["喪失","後悔","悲哀"],           upright:"後悔に焦点を当てすぎています。残っているものに目を向けて前向きに。",          reversed:"悲しみから立ち直りつつあります。前を向く準備が整ってきました。"},
+  "cups_6":       {name:"カップの6",       en:"Six of Cups",       score:0,  rscore:-1, keywords:["懐かしさ","純粋さ","贈り物"],   upright:"純粋な気持ちで選ぶ時。過去の経験を活かして、シンプルな喜びを大切に。",        reversed:"過去への固執が現在を見えなくしています。今この瞬間に目を向けて。"},
+  "cups_7":       {name:"カップの7",       en:"Seven of Cups",     score:-2, rscore:-1, keywords:["幻想","願望","選択"],           upright:"多くの選択肢があります。現実と幻想を見極め、本当に必要なものを選びましょう。", reversed:"混乱から抜け出し、現実的な選択ができるようになってきています。"},
+  "cups_8":       {name:"カップの8",       en:"Eight of Cups",     score:-1, rscore:-2, keywords:["撤退","探求","手放し"],         upright:"今あるものを手放し、より深い意味を求める転換点。本当に必要なものを問い直して。", reversed:"引き留めているものから離れられない状態。何を本当に求めているか見つめ直して。"},
+  "cups_9":       {name:"カップの9",       en:"Nine of Cups",      score:3,  rscore:1,  keywords:["満足","願望成就","幸福"],       upright:"願いが叶う吉兆！深い満足感と幸福が訪れます。自信を持って進みましょう。",      reversed:"外見上の満足の裏に空虚さが。本当に求めているものを見つめ直して。"},
+  "cups_10":      {name:"カップの10",      en:"Ten of Cups",       score:2,  rscore:0,  keywords:["幸福","調和","永続する喜び"],   upright:"長期的な幸福と調和が実現します。大切な人と共に喜べる選択を。",              reversed:"表面的な幸福の裏の問題に注意。本当に大切なものを見つめ直して。"},
+  "cups_page":    {name:"カップのペイジ",  en:"Page of Cups",      score:0,  rscore:-1, keywords:["感受性","夢想","直感"],         upright:"感受性豊かな直感からのメッセージ。夢やインスピレーションに耳を傾けて。",      reversed:"感情的な未熟さや空想への逃避に注意。地に足をつけた判断を。"},
+  "cups_knight":  {name:"カップのナイト",  en:"Knight of Cups",    score:1,  rscore:-1, keywords:["ロマンス","理想主義","感情"],   upright:"理想を追い求めるエネルギーが高まっています。夢と現実のバランスを保って。",    reversed:"感情的な不安定さへの注意。現実的な視点も忘れないで。"},
+  "cups_queen":   {name:"カップのクイーン",en:"Queen of Cups",     score:1,  rscore:-1, keywords:["共感","直感","思いやり"],       upright:"深い共感力と直感で判断する時。感情の知性を活かした選択を。",                reversed:"感情に溺れることへの注意。自己ケアのバランスも大切に。"},
+  "cups_king":    {name:"カップのキング",  en:"King of Cups",      score:1,  rscore:0,  keywords:["感情的成熟","知恵","外交的"],   upright:"感情と理性をバランスさせた成熟した判断力があります。冷静に、でも温かく選択を。", reversed:"感情の操作や抑圧に注意。オープンな心で向き合って。"},
+  "swords_ace":   {name:"ソードのエース",  en:"Ace of Swords",     score:1,  rscore:-1, keywords:["真実","明晰さ","突破口"],       upright:"真実と明晰な思考の力。鋭い知性で本質を見抜き、正しい判断をする時です。",    reversed:"混乱した思考や誤解に注意。もっと情報を集めてから判断しましょう。"},
+  "swords_2":     {name:"ソードの2",      en:"Two of Swords",     score:-1, rscore:-2, keywords:["行き詰まり","選択","決断回避"], upright:"難しい選択の前で立ち止まっています。目を開き、現実と向き合う勇気が必要です。", reversed:"情報が明らかになり、決断の準備が整いつつあります。"},
+  "swords_3":     {name:"ソードの3",      en:"Three of Swords",   score:-2, rscore:-1, keywords:["悲しみ","痛み","喪失"],         upright:"心の痛みと向き合っている時期。感情を大切にしながら、一歩ずつ前に進みましょう。", reversed:"悲しみが癒えてきています。回復に向けた一歩を。"},
+  "swords_4":     {name:"ソードの4",      en:"Four of Swords",    score:-2, rscore:0,  keywords:["休息","回復","静寂"],           upright:"今は休息と回復が必要な時期。英気を養ってから次の行動に移りましょう。",        reversed:"休息から目覚め、再び動き出す準備ができています。"},
+  "swords_5":     {name:"ソードの5",      en:"Five of Swords",    score:-2, rscore:-1, keywords:["葛藤","敗北","退却"],           upright:"勝っても傷が残る争い。今は引き時を見極める知恵が必要です。",                  reversed:"争いが収まりつつあります。和解や手放しで良い結果が生まれます。"},
+  "swords_6":     {name:"ソードの6",      en:"Six of Swords",     score:0,  rscore:-1, keywords:["移行","回復","穏やかな水"],     upright:"困難な状況から穏やかな場所へ移行中。嵐は過ぎ去りつつあります。",              reversed:"前に進みたいのに引き戻されている状態。何を手放すべきかを考えて。"},
+  "swords_7":     {name:"ソードの7",      en:"Seven of Swords",   score:-1, rscore:-2, keywords:["欺瞞","戦略","不誠実"],         upright:"戦略的な行動が必要ですが、誠実さの範囲内で。騙されていないか確認を。",        reversed:"隠されていたことが明らかになる時。正直に向き合うことで解決できます。"},
+  "swords_8":     {name:"ソードの8",      en:"Eight of Swords",   score:-2, rscore:0,  keywords:["拘束","無力感","自己制限"],     upright:"縛られているように感じていますが、多くは思い込みから来ています。視野を広げて。", reversed:"解放への一歩を踏み出す準備ができています。恐れを超えて進みましょう。"},
+  "swords_9":     {name:"ソードの9",      en:"Nine of Swords",    score:-3, rscore:-2, keywords:["不安","悪夢","心配"],           upright:"心配や不安が大きくなっています。多くは思い込みです。冷静に現実を見つめて。",  reversed:"最悪の状況は過ぎ去りつつあります。深呼吸して前を向きましょう。"},
+  "swords_10":    {name:"ソードの10",     en:"Ten of Swords",     score:-3, rscore:-1, keywords:["終焉","痛み","サイクルの完結"], upright:"困難な終わりの後、新しい始まりへの扉が開かれます。夜明けはすぐそこです。",    reversed:"最悪の時期を乗り越え、回復が始まっています。"},
+  "swords_page":  {name:"ソードのペイジ", en:"Page of Swords",    score:0,  rscore:-1, keywords:["好奇心","観察","コミュニケーション"], upright:"鋭い知性と好奇心で情報を探求する時。よく調べて判断しましょう。",         reversed:"噂や軽率な言葉への注意。信頼性の高い情報源から確認を。"},
+  "swords_knight":{name:"ソードのナイト", en:"Knight of Swords",  score:1,  rscore:-1, keywords:["野心","行動力","大胆"],         upright:"素早い決断と大胆な行動で進む時。ただし周囲への影響も考慮して。",              reversed:"無謀さへの警告。スピードを落として、慎重に進みましょう。"},
+  "swords_queen": {name:"ソードのクイーン",en:"Queen of Swords",  score:1,  rscore:0,  keywords:["独立","明晰","誠実さ"],         upright:"経験から生まれた知恵と明晰な判断力で進む時。正直に自分の意志を持って。",      reversed:"冷淡さへの注意。心を開いて、感情面も大切に判断を。"},
+  "swords_king":  {name:"ソードのキング", en:"King of Swords",    score:1,  rscore:0,  keywords:["権威","知性","公正"],           upright:"高い知性と公正な判断力で複雑な状況を分析できます。倫理と論理に基づいて進みましょう。", reversed:"独裁的な態度への警告。周囲の声にも耳を傾けて。"},
+  "pentacles_ace":    {name:"ペンタクルのエース",  en:"Ace of Pentacles",   score:3,  rscore:0,  keywords:["新しい機会","豊かさ","繁栄"],       upright:"物質的な豊かさと新しい機会の扉が開かれています。この機会をしっかり育てましょう。", reversed:"機会を逃しているか、執着が問題です。焦らず見直しを。"},
+  "pentacles_2":      {name:"ペンタクルの2",      en:"Two of Pentacles",    score:0,  rscore:-1, keywords:["バランス","適応","柔軟性"],         upright:"複数のことのバランスを保ちながら進んでいます。状況に合わせて柔軟に対応を。",  reversed:"手を広げすぎて混乱気味。優先順位を整理しましょう。"},
+  "pentacles_3":      {name:"ペンタクルの3",      en:"Three of Pentacles",  score:1,  rscore:-1, keywords:["チームワーク","スキル","協力"],     upright:"専門的なスキルと協力の力で進む時。信頼できる人の助けを借りながら判断しましょう。", reversed:"チームワークの問題や品質の低下に注意。しっかり確認してから進めて。"},
+  "pentacles_4":      {name:"ペンタクルの4",      en:"Four of Pentacles",   score:-1, rscore:-2, keywords:["安定","保存","執着"],             upright:"安定を守りたい気持ちは自然ですが、執着しすぎると成長が止まります。変化も受け入れて。", reversed:"執着を手放すことで、より豊かな流れが戻ってきます。"},
+  "pentacles_5":      {name:"ペンタクルの5",      en:"Five of Pentacles",   score:-2, rscore:-1, keywords:["困難","喪失","孤立"],             upright:"経済的・精神的な困難の時期。助けは近くにあります。サポートを求めることも大切。", reversed:"困難から立ち直りつつあります。回復の兆しが見え始めています。"},
+  "pentacles_6":      {name:"ペンタクルの6",      en:"Six of Pentacles",    score:1,  rscore:0,  keywords:["寛大さ","与える","バランス"],     upright:"与えることと受け取ることのバランスが大切。豊かさを分かち合うことで循環が生まれます。", reversed:"一方的な関係になっていないか確認を。バランスを見直しましょう。"},
+  "pentacles_7":      {name:"ペンタクルの7",      en:"Seven of Pentacles",  score:-1, rscore:-2, keywords:["忍耐","長期的投資","収穫前"],     upright:"努力の成果が実を結ぶまでもう少し時間が必要です。長期的な視点を持って取り組み続けましょう。", reversed:"焦りへの注意。何に投資すべきかを見直す良い時期です。"},
+  "pentacles_8":      {name:"ペンタクルの8",      en:"Eight of Pentacles",  score:1,  rscore:0,  keywords:["職人精神","技術向上","勤勉"],     upright:"コツコツと積み重ねることで真の熟達に近づきます。今の仕事に誠実に向き合いましょう。", reversed:"品質より量に走っていないか、完璧主義で進めないでいないか見直しを。"},
+  "pentacles_9":      {name:"ペンタクルの9",      en:"Nine of Pentacles",   score:2,  rscore:0,  keywords:["豊かさ","独立","達成"],           upright:"自分の努力で築いた豊かさを享受する時期。その成果を誇りに思いましょう。",      reversed:"物質的豊かさの裏に空虚さを感じていませんか？本当の満足を探してみて。"},
+  "pentacles_10":     {name:"ペンタクルの10",     en:"Ten of Pentacles",    score:3,  rscore:1,  keywords:["豊かさ","安定","繁栄"],           upright:"長年の努力が実り、確かな安定と繁栄が確立されます。大きな決断に最良のタイミング。", reversed:"家族や財産の問題への注意。本当に大切なものを見つめ直しましょう。"},
+  "pentacles_page":   {name:"ペンタクルのペイジ", en:"Page of Pentacles",   score:0,  rscore:-1, keywords:["学習","新しいスキル","向上心"],   upright:"新しいスキルや知識を学ぶ姿勢が大切な時期。しっかり調べてから進みましょう。",  reversed:"計画倒れや取り組みの甘さに注意。基礎をしっかり固めてから。"},
+  "pentacles_knight": {name:"ペンタクルのナイト", en:"Knight of Pentacles", score:1,  rscore:0,  keywords:["勤勉","信頼性","忍耐"],           upright:"着実で信頼できる方法で目標に向かっています。コツコツとした努力が確かな結果をもたらします。", reversed:"頑固な完璧主義が停滞を招いています。少し柔軟に進めてみて。"},
+  "pentacles_queen":  {name:"ペンタクルのクイーン",en:"Queen of Pentacles", score:2,  rscore:0,  keywords:["実践的","豊かさ","現実的な知恵"], upright:"実践的な知恵と現実的な判断力で豊かさをもたらします。大地に根差した選択を。", reversed:"物質への執着や過保護への注意。少し余裕を持って判断を。"},
+  "pentacles_king":   {name:"ペンタクルのキング", en:"King of Pentacles",   score:2,  rscore:0,  keywords:["豊かさ","ビジネスの成功","安定"], upright:"実践的なビジョンと信頼性で物質的な成功が手に入ります。長期的な視点で進みましょう。", reversed:"物質主義への警告。本当に大切なものを見失わないで。"}
+};
+
+const MAJOR_KEYS = Object.keys(TAROT_DATA).filter(k => k.startsWith('major_'));
+const ALL_KEYS   = Object.keys(TAROT_DATA);
+
+const SPREAD_POSITIONS = {
+  1:  ["現在の状況"],
+  3:  ["過去","現在","未来"],
+  5:  ["現在","課題","潜在意識","アドバイス","結果"],
+  10: ["現在の状況","障害または助け","遠い過去の基盤","近い過去","可能な結果","近い未来","あなた自身","外部環境","希望と恐れ","最終結果"]
+};
+
+// ===== テーマ別メッセージ =====
+// スコア帯ごと（high/mid/low）× ポジティブ/ネガティブカード比率でメッセージを生成
+const THEME_DATA = {
+  overall: {
+    label:"総合運", icon:"🌟",
+    high:  ["星々があなたに微笑みかけています。引き寄せのエネルギーが高まり、思いがけない好機が次々と舞い込む予感があります。自分を信じて行動する時です。","大きな流れがあなたの味方をしています。積み重ねてきた努力が実を結び始め、充実した日々が続くでしょう。感謝の心を持ちながら、この恵みを享受してください。"],
+    mid:   ["穏やかながらも確かな前進が感じられます。急がず焦らず、一歩一歩を丁寧に重ねることで、確かな豊かさへと繋がっていきます。","バランスを保ちながら歩む時期です。良いことも課題もありますが、それが今のあなたの成長に必要なプロセスです。"],
+    low:   ["今は嵐の中を進んでいる時かもしれません。しかし嵐の後には必ず晴れ間が来ます。今は無理をせず、エネルギーを蓄えることに集中しましょう。","立ち止まることも、前進することと同じくらい大切です。今は内側と向き合い、次の一歩を慎重に見極める時期です。"],
+    advice:["まず、今日一日の小さな喜びに目を向けてみてください。大きな変化は小さな気づきから始まります。","今の自分を丸ごと受け入れることが、次のステージへの扉を開きます。"]
+  },
+  fortune: {
+    label:"直近の運勢", icon:"✨",
+    high:  ["数日以内に嬉しい展開が訪れそうです。アンテナを高く張り、タイミングを逃さないようにしましょう。","直近のエネルギーは非常に良好です。思い切った行動や新しいことへの挑戦が吉と出るでしょう。"],
+    mid:   ["今週は穏やかな流れです。派手な動きより、日常の中の小さな幸せを大切にする時間にしてください。","可もなく不可もなく、という状態ですが、その安定の中に次の飛躍の種が眠っています。"],
+    low:   ["直近は少し慎重に過ごす方が良さそうです。新しいことを始めるより、今あることを整理・見直す期間にして。","エネルギーが落ち着いている時期です。無理に動かず、休息を優先させることで次の好機に備えましょう。"],
+    advice:["今日やることリストを3つに絞ってみて。シンプルにすることで流れが生まれます。","直感が何かを伝えているなら、それに従ってみる価値があります。"]
+  },
+  money: {
+    label:"金運", icon:"💰",
+    high:  ["金運が上向いています。新しい収入の流れや、思わぬ臨時収入の可能性があります。チャンスには積極的に乗っていきましょう。","お金との関係が良好な時期です。賢く使い、賢く蓄えることで、さらなる豊かさが循環してきます。"],
+    mid:   ["大きな変動はないものの、安定した流れが続いています。今は無駄を省いて基盤を整える時期です。","収支のバランスを意識する時。今月は特別な出費を抑えつつ、長期的な視点でお金を管理しましょう。"],
+    low:   ["金銭面で注意が必要な時期です。衝動買いや感情的な出費は避け、必要なものだけに絞りましょう。","今は財布の紐をしっかり締める時。節制することで、次の豊かさのサイクルへの準備ができます。"],
+    advice:["お金は使い方より、何に価値を感じるかを見直すことが大切です。","小さな節約より、収入を増やす視点を持つことを意識してみて。"]
+  },
+  work: {
+    label:"仕事運", icon:"💼",
+    high:  ["仕事運が好調です。プロジェクトが順調に進み、あなたの努力が周囲に認められる時期が来ています。積極的にアピールしましょう。","キャリアの転換点となる可能性があります。新しい役割やチャンスが舞い込んできたら、臆せず受け取って。"],
+    mid:   ["着実に積み上げていく時期です。地味に見えても、今の努力は確実に未来の実を結んでいます。","チームとの協力や信頼関係を大切にする時期。人との繋がりが次のステージへの架け橋になります。"],
+    low:   ["仕事面で壁を感じているかもしれません。今は戦略を見直し、方向性を再確認する時間にしましょう。","焦りは禁物です。今は種を蒔く時期ではなく、土を耕す準備期間。今できることを丁寧にやり切って。"],
+    advice:["今日一つ、苦手だと思っていた仕事に小さく挑戦してみて。そこに新たな可能性が眠っています。","上司や同僚への感謝を言葉で伝えてみると、思わぬ良い流れが生まれるかもしれません。"]
+  },
+  relation: {
+    label:"対人運", icon:"🤝",
+    high:  ["人間関係に追い風が吹いています。新しい出会いや、既存の関係がより深まるサインが見えます。心を開いて人と関わりましょう。","周囲との調和が生まれやすい時期です。あなたの温かさや誠実さが、人々を引き寄せています。"],
+    mid:   ["関係は安定しています。特別なことはなくても、日常の中の小さな会話や気遣いを大切にしてください。","良好な関係を維持するためには、相手の立場に立つことが大切。少し視点を変えてみましょう。"],
+    low:   ["対人関係で摩擦や誤解が生じやすい時期かもしれません。言葉を選び、聞く姿勢を意識して。","今は無理に関係を広げるより、信頼できる少数の人との絆を深めることに集中しましょう。"],
+    advice:["誰かに感謝の気持ちを伝えるメッセージを送ってみて。小さな一言が大きな縁を生みます。","自分を大切にすることが、良い人間関係の土台になります。まず自分を満たすことから。"]
+  },
+  love: {
+    label:"恋愛運", icon:"💕",
+    high:  ["恋愛運が高まっています。新しい出会いや関係の深まりが期待できます。ときめきを大切に、心の声に従って動いてみましょう。","愛のエネルギーが満ちています。今の気持ちを素直に伝えることで、関係が一段階深まるでしょう。"],
+    mid:   ["恋愛は穏やかに進んでいます。劇的な変化はなくても、日常のなかで愛を育てることが大切な時です。","焦りは禁物。縁があるものは自然と近づいてきます。今は自分磨きの時間として活用して。"],
+    low:   ["恋愛面では少し立ち止まる時期かもしれません。今は内側を整え、自分自身と向き合うことに集中を。","すれ違いや誤解が生じやすい時期です。相手の気持ちを丁寧に確認しながら、ゆっくり進んで。"],
+    advice:["自分が幸せでいることが、最高の恋愛の引き寄せになります。まず自分の笑顔を大切に。","相手に求めるより、自分が与えられるものに目を向けてみると関係が変わるかもしれません。"]
+  },
+  health: {
+    label:"健康運", icon:"🌿",
+    high:  ["体のエネルギーが充実しています。この活力を活かして、やりたいことに積極的に取り組みましょう。","心身ともに良い状態です。今の生活リズムを大切にして、このバランスを維持してください。"],
+    mid:   ["健康面は安定しています。今のペースを崩さず、睡眠・食事・運動のバランスを意識することが大切です。","大きな問題はありませんが、小さな不調のサインを見逃さないように。早めのケアが肝心です。"],
+    low:   ["疲れが蓄積しているかもしれません。今は休息を最優先に。無理なスケジュールを見直しましょう。","体が休みを求めているサインかもしれません。今週は予定を減らして、自分を労わる時間を作って。"],
+    advice:["今日一つ、体に優しいことをしてみて。温かい飲み物、早めの就寝、深呼吸でもOK。","心の健康も体の健康と同じくらい大切。嫌なことを溜め込まず、誰かに話してみて。"]
+  },
+  creative: {
+    label:"創造・才能", icon:"🎨",
+    high:  ["創造のエネルギーが満ちています。インスピレーションが次々と湧いてくる時期。迷わずアウトプットしていきましょう。","才能が花開く時期が来ています。人に見せることを恐れず、あなたの表現を世界に届けて。"],
+    mid:   ["コツコツと積み上げる時期です。派手な成果はなくても、今の積み重ねが後の大きな花を咲かせます。","新しいインプットが創造力を高めます。本、映画、音楽、旅行など刺激を受け取ってみて。"],
+    low:   ["創造力が内側に向かっている時期かもしれません。無理に作ろうとせず、今は鑑賞・吸収に徹してみて。","スランプは誰にでも来ます。今は休息をとり、日常の中の小さな美しさに目を向けることで再び火が灯ります。"],
+    advice:["完璧を目指さず、今日は「とりあえずやってみる」を合言葉に。行動がインスピレーションを連れてきます。","好きなことに没頭する時間を意識的に確保して。それがあなたの才能を磨く一番の方法です。"]
+  },
+  spirit: {
+    label:"心・精神面", icon:"🔮",
+    high:  ["内なる光が輝いています。直感が冴え、自分自身との繋がりが深まっている時期です。その声を大切に。","精神的な豊かさに満ちた時期です。瞑想や内省の時間を持つことで、より深い気づきが得られます。"],
+    mid:   ["心は穏やかに揺れています。感情の波を否定せず、ただ観察する視点を持つことが成長に繋がります。","内と外のバランスを保つ時期です。一人の時間と人との時間、両方を大切にしてください。"],
+    low:   ["心が疲れているサインかもしれません。今は無理に前向きになろうとせず、感情を感じ切ることが大切です。","暗いトンネルの中にいても、出口は必ずあります。今は一人で抱え込まず、信頼できる人に話してみて。"],
+    advice:["今日5分間、静かに目を閉じて呼吸に意識を向けてみて。それだけで心が少し軽くなります。","自分の感情を日記に書き出すことで、客観的に見つめ直すきっかけになります。"]
+  }
+};
+
+// ===== 状態 =====
+let selectedCount  = 1;
+let selectedArcana = 'major';
+let selectedTheme  = 'overall';
+let reversedEnabled = false;
+
+let drawnCards      = [];
+
+// 星生成
+(function(){
+  const c = document.getElementById('stars');
+  for(let i=0;i<120;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*2.5+0.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${Math.random()*4+2}s;--delay:${Math.random()*5}s;--brightness:${Math.random()*.5+.3};`;
+    c.appendChild(s);
+  }
+})();
+
+// イベント
+document.querySelectorAll('[data-count]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-count]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); selectedCount=parseInt(btn.dataset.count);
+  });
+});
+document.querySelectorAll('[data-arcana]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-arcana]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); selectedArcana=btn.dataset.arcana;
+  });
+});
+document.querySelectorAll('[data-theme]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-theme]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); selectedTheme=btn.dataset.theme;
+  });
+});
+document.getElementById('reversed-toggle').addEventListener('change',e=>{reversedEnabled=e.target.checked;});
+
+
+// カードを引く
+function drawCards(count){
+  const pool = selectedArcana === 'all' ? ALL_KEYS : MAJOR_KEYS;
+  const shuffled=[...pool].sort(()=>Math.random()-.5);
+  return shuffled.slice(0,count).map(key=>({
+    key, data:TAROT_DATA[key],
+    reversed: reversedEnabled ? Math.random()<.5 : false
+  }));
+}
+
+// スコア計算
+function calcScore(cards){
+  const raw = cards.reduce((s,c)=>s+(c.reversed?c.data.rscore:c.data.score),0);
+  return raw/cards.length;
+}
+
+// 総合リーディング生成
+function generateReading(cards){
+  const theme = THEME_DATA[selectedTheme];
+  const score = calcScore(cards);
+  const pct   = Math.round(((score+3)/6)*100);
+
+  // スコア帯判定
+  const tier = score>=1.2 ? 'high' : score>=-0.5 ? 'mid' : 'low';
+  const msgs = theme[tier];
+  const mainMsg = msgs[Math.floor(Math.random()*msgs.length)];
+  const adviceArr = theme.advice;
+  const advice = adviceArr[Math.floor(Math.random()*adviceArr.length)];
+
+  // ポジティブ/ネガティブカード抽出
+  const posCards = cards.filter(c=>(c.reversed?c.data.rscore:c.data.score)>=1);
+  const negCards = cards.filter(c=>(c.reversed?c.data.rscore:c.data.score)<=-1);
+
+  // カード別ミニメッセージ
+  const positions = SPREAD_POSITIONS[cards.length]||cards.map((_,i)=>`カード${i+1}`);
+  const cardMsgs = cards.map((c,i)=>{
+    const meaning = c.reversed ? c.data.reversed : c.data.upright;
+    return {pos:positions[i], name:c.data.name, text:meaning, reversed:c.reversed};
+  });
+
+  // 追加文（ポジ/ネガ比率による）
+  let flowExtra = '';
+  if(posCards.length>negCards.length){
+    flowExtra = `特に${posCards.map(c=>c.data.name).join('・')}のエネルギーがあなたを後押ししています。`;
+  } else if(negCards.length>posCards.length){
+    flowExtra = `${negCards.map(c=>c.data.name).join('・')}が示す課題を丁寧に受け止めることで、次の道が開けてきます。`;
+  }
+
+  return { mainMsg, advice, flowExtra, cardMsgs, score, pct, tier };
+}
+
+// 総合リーディング表示
+function renderOverall(cards){
+  const theme = THEME_DATA[selectedTheme];
+  const { mainMsg, advice, flowExtra, cardMsgs, score, pct } = generateReading(cards);
+  const scoreStr = score>=0 ? `+${score.toFixed(1)}` : score.toFixed(1);
+  const spreadName = {1:'一枚引き',3:'スリーカード',5:'ファイブカード',10:'ケルト十字'}[cards.length]||`${cards.length}枚引き`;
+
+  const area = document.getElementById('overall-area');
+  area.innerHTML = `
+    <div class="overall-panel">
+      <div class="overall-header">
+        <div class="overall-icon">${theme.icon}</div>
+        <div>
+          <div class="overall-title">${theme.label}の総合リーディング</div>
+          <div class="overall-subtitle">${spreadName} ／ ${cards.length}枚のカードが語るメッセージ</div>
+        </div>
+      </div>
+      <div class="overall-theme-badge">✦ ${theme.label}</div>
+      <div class="overall-score-row">
+        <div class="overall-score-label">✦ 運気スコア</div>
+        <div class="overall-score-bar"><div class="overall-score-fill" id="score-fill" style="width:0%"></div></div>
+        <div class="overall-score-val">${scoreStr}</div>
+      </div>
+      <div class="flow-section">
+        <div class="flow-title">✦ 全体の流れ</div>
+        <p class="flow-text">${mainMsg}${flowExtra ? '　'+flowExtra : ''}</p>
+      </div>
+      <div class="divider"></div>
+      <div class="flow-section">
+        <div class="flow-title">✦ カードが示すこと</div>
+        <div class="card-messages">
+          ${cardMsgs.map(m=>`
+            <div class="card-msg-row">
+              <div class="card-msg-name">${m.name}${m.reversed?'（逆）':''}<br><span style="font-size:.62rem;opacity:.6;font-style:normal;">${m.pos}</span></div>
+              <div class="card-msg-text">${m.text}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="flow-section">
+        <div class="flow-title">✦ 星からのアドバイス</div>
+        <p class="flow-text" style="font-style:italic;color:var(--text-dim);">「${advice}」</p>
+      </div>
+    </div>`;
+
+  setTimeout(()=>{
+    const fill = document.getElementById('score-fill');
+    if(fill) fill.style.width = pct+'%';
+  },200);
+}
+
+// カード表示
+function renderCards(cards){
+  const grid = document.getElementById('cards-grid');
+  const positions = SPREAD_POSITIONS[cards.length]||cards.map((_,i)=>`カード ${i+1}`);
+  grid.innerHTML='';
+  cards.forEach((card,i)=>{
+    const wrapper=document.createElement('div'); wrapper.className='card-wrapper';
+    const frame=document.createElement('div'); frame.className='card-frame'+(card.reversed?' reversed':'');
+    const img=document.createElement('img');
+    img.alt=card.data.name; img.referrerPolicy='no-referrer'; img.crossOrigin='anonymous'; img.loading='lazy';
+    img.src=card.data.img;
+    img.onerror=function(){
+      this.onerror=null; this.style.display='none';
+      frame.style.background='linear-gradient(135deg,#1a0f2e,#2a1f3d)';
+      const fb=document.createElement('div');
+      fb.style.cssText='position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;text-align:center;';
+      fb.innerHTML=`<div style="font-size:1.8rem;color:#c9a84c;margin-bottom:6px">✦</div><div style="color:#c9a84c;font-size:.76rem;font-family:Cormorant Garamond,serif;line-height:1.3">${card.data.name}</div>`;
+      frame.appendChild(fb);
+    };
+    const badge=document.createElement('div'); badge.className='card-badge'; badge.textContent=card.reversed?'逆':'正';
+    frame.appendChild(img); frame.appendChild(badge);
+    const nameEl=document.createElement('div'); nameEl.className='card-name'; nameEl.textContent=card.data.name;
+    const posEl=document.createElement('div'); posEl.className='card-pos-label'; posEl.textContent=positions[i];
+    wrapper.appendChild(frame); wrapper.appendChild(nameEl); wrapper.appendChild(posEl);
+    wrapper.addEventListener('click',()=>showCardDetail(i,wrapper));
+    grid.appendChild(wrapper);
+    setTimeout(()=>wrapper.classList.add('visible'),i*150+100);
+  });
+}
+
+// 個別カード解説
+function showCardDetail(index, wrapper){
+  document.querySelectorAll('.card-wrapper').forEach(w=>w.classList.remove('selected'));
+  wrapper.classList.add('selected');
+  const card=drawnCards[index];
+  const positions=SPREAD_POSITIONS[drawnCards.length]||drawnCards.map((_,i)=>`カード ${i+1}`);
+  const meaning=card.reversed?card.data.reversed:card.data.upright;
+  const keywords=card.reversed?card.data.keywords.map(k=>k+'（逆）'):card.data.keywords;
+  const panel=document.getElementById('reading-panel');
+  panel.innerHTML=`
+    <div class="reading-card-title">${card.data.name}（${card.data.en}）</div>
+    <div class="reading-position">${positions[index]} ｜ ${card.reversed?'逆位置':'正位置'}</div>
+    <hr class="divider">
+    <div class="reading-section-title">✦ キーワード</div>
+    <div style="margin-bottom:18px">${keywords.map(k=>`<span class="reading-keyword">${k}</span>`).join('')}</div>
+    <hr class="divider">
+    <div class="reading-section-title">✦ 解説</div>
+    <p class="reading-text">${meaning}</p>`;
+  const ra=document.getElementById('reading-area');
+  ra.style.display='block';
+  ra.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ドローボタン
+document.getElementById('draw-btn').addEventListener('click',async()=>{
+  const drawBtn=document.getElementById('draw-btn');
+  const loading=document.getElementById('loading');
+  const cardsArea=document.getElementById('cards-area');
+  const resetBtn=document.getElementById('reset-btn');
+
+  drawBtn.disabled=true;
+  loading.style.display='block';
+  cardsArea.style.display='none';
+  document.getElementById('overall-area').innerHTML='';
+  document.getElementById('reading-area').style.display='none';
+
+  await new Promise(r=>setTimeout(r,700));
+
+  drawnCards=drawCards(selectedCount);
+  loading.style.display='none';
+  cardsArea.style.display='block';
+  resetBtn.style.display='block';
+
+  renderCards(drawnCards);
+  setTimeout(()=>renderOverall(drawnCards),500);
+});
+
+// リセット
+document.getElementById('reset-btn').addEventListener('click',()=>{
+  document.getElementById('draw-btn').disabled=false;
+  document.getElementById('cards-area').style.display='none';
+  document.getElementById('reset-btn').style.display='none';
+  document.getElementById('overall-area').innerHTML='';
+  document.getElementById('reading-area').style.display='none';
+  drawnCards=[];
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+</script>
+</body>
+</html>
